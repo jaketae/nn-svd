@@ -30,7 +30,7 @@ def get_args():
 
 def main(args) -> None:
     pl.seed_everything(args.seed)
-    logger_path = "./src/logs"
+    logger_path = "logs"
     if args.rank == -1:
         # full rank from scratch
         model = MNISTModel(hidden_size=args.hidden_size, lr=args.lr)
