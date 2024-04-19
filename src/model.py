@@ -10,6 +10,7 @@ from .low_rank import LowRankLinear, apply_low_rank
 class MNISTModel(pl.LightningModule):
     def __init__(self, hidden_size: int = 64, lr=2e-4):
         super().__init__()
+        self.save_hyperparameters()
         self.lr = lr
         num_classes = 10
         self.l1 = nn.Linear(28 * 28, hidden_size)
@@ -54,7 +55,7 @@ class MNISTModel(pl.LightningModule):
         self.log("val_acc", self.val_accuracy)
 
     def test_step(self, batch, batch_idx):
-        x, y, logits, loss = self.base_step(batch, batch_idx)
+        _, y, logits, loss = self.base_step(batch, batch_idx)
         preds = torch.argmax(logits, dim=1)
         self.val_accuracy.update(preds, y)
         self.log("test_loss", loss)
@@ -65,7 +66,6 @@ class MNISTModel(pl.LightningModule):
         model = cls.load_from_checkpoint(checkpoint_path)
         apply_low_rank(model, "l1", rank, LowRankLinear)
         apply_low_rank(model, "l2", rank, LowRankLinear)
-        apply_low_rank(model, "l3", rank, LowRankLinear)
         return model
 
 
@@ -74,13 +74,28 @@ class MNISTLowRankModel(MNISTModel):
         self,
         rank: int,
         symmetric: bool = False,
+        orthonormal: bool = False,
+        alpha: float = 1e-2,
         hidden_size: int = 64,
         lr: float = 2e-4,
     ):
         super().__init__(hidden_size=hidden_size, lr=lr)
+        self.save_hyperparameters()
         self.rank = rank
+        self.alpha = alpha
+        self.orthonormal = orthonormal
         self.l1 = LowRankLinear(28 * 28, hidden_size, self.rank)
         self.l2 = LowRankLinear(
             hidden_size, hidden_size, self.rank, symmetric=symmetric
         )
-        self.l3 = nn.Linear(hidden_size, 10)
+
+    def orthonormal_penalty(self):
+        penalty1 = self.l1.orthonormal_penalty()
+        penalty2 = self.l2.orthonormal_penalty()
+        return penalty1 + penalty2
+
+    def base_step(self, batch, batch_idx):
+        x, y, logits, loss = super().base_step(batch, batch_idx)
+        if self.orthonormal:
+            loss = loss + self.alpha * self.orthonormal_penalty()
+        return x, y, logits, loss

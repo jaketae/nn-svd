@@ -2,9 +2,6 @@ import argparse
 import os
 
 import lightning.pytorch as pl
-import matplotlib.pyplot as plt
-import pandas as pd
-import seaborn as sns
 
 from .data import MNISTDataModule
 from .model import MNISTLowRankModel, MNISTModel
@@ -14,27 +11,21 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--max_epochs", type=int, default=10)
-    parser.add_argument("--batch_size", type=int, default=16)
+    parser.add_argument("--batch_size", type=int, default=512)
     parser.add_argument("--num_workers", type=int, default=32)
     parser.add_argument("--hidden_size", type=int, default=64)
-    parser.add_argument("--lr", type=float, default=2e-4)
+    parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--rank", type=int, default=-1)
     parser.add_argument("--symmetric", action="store_true")
     parser.add_argument("--no-symmetric", dest="symmetric", action="store_false")
     parser.set_defaults(symmetric=False)
+    parser.add_argument("--orthonormal", action="store_true")
+    parser.add_argument("--no-orthonormal", dest="orthonormal", action="store_false")
+    parser.set_defaults(orthonormal=False)
+    parser.add_argument("--alpha", type=float, default=0)
     parser.add_argument("--checkpoint_path", type=str, required=False)
     args = parser.parse_args()
     return args
-
-
-def read_metrics(logger) -> None:
-    logger_path = logger.log_dir
-    metrics_path = os.path.join(logger_path, "metrics.csv")
-    metrics = pd.read_csv(metrics_path)
-    del metrics["step"]
-    metrics.set_index("epoch", inplace=True)
-    sns.relplot(data=metrics, kind="line")
-    plt.savefig(os.path.join(logger_path, "plot.png"))
 
 
 def main(args) -> None:
@@ -51,10 +42,15 @@ def main(args) -> None:
             lr=args.lr,
             rank=args.rank,
             symmetric=args.symmetric,
+            orthonormal=args.orthonormal,
+            alpha=args.alpha,
         )
-        logger_path = os.path.join(logger_path, f"{args.rank}")
+        suffix = ""
         if args.symmetric:
-            logger_path = os.path.join(logger_path, "_symmetric")
+            suffix += "_symmetric"
+        if args.orthonormal:
+            suffix += f"_orthonormal_{args.alpha}"
+        logger_path = os.path.join(logger_path, f"{args.rank}" + suffix)
     else:
         # svd full rank to low rank
         model = MNISTModel.from_pretrained(
@@ -73,7 +69,6 @@ def main(args) -> None:
     )
     trainer.fit(model, datamodule=datamodule)
     trainer.test(model, datamodule=datamodule)
-    read_metrics(trainer.logger)
 
 
 if __name__ == "__main__":

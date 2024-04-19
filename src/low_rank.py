@@ -108,6 +108,12 @@ class LowRankMixin(abc.ABC):
         pass
 
 
+def compute_orthonormal_penalty(weight):
+    symmetric1 = weight @ weight.T - torch.eye(weight.size(0), device=weight.device)
+    symmetric2 = weight.T @ weight - torch.eye(weight.size(1), device=weight.device)
+    return torch.square(torch.norm(symmetric1)) + torch.square(torch.norm(symmetric2))
+
+
 class LowRankLinear(nn.Module, LowRankMixin):
     def __init__(
         self,
@@ -152,6 +158,14 @@ class LowRankLinear(nn.Module, LowRankMixin):
     @factor2.setter
     def factor2(self, factor):
         self.linear2.weight = nn.Parameter(factor.T)
+
+    def orthonormal_penalty(self):
+        penalty = compute_orthonormal_penalty(self.linear2.weight)
+        if self.symmetric:
+            penalty = penalty * 2
+        else:
+            penalty = penalty + compute_orthonormal_penalty(self.linear1.weight)
+        return penalty
 
     def forward(self, x):
         if not self.symmetric:
