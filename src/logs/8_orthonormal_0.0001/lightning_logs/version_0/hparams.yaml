@@ -1,0 +1,6 @@
+hidden_size: 64
+lr: 0.001
+rank: 8
+symmetric: false
+orthonormal: true
+alpha: 0.0001

@@ -1,0 +1,4 @@
+hidden_size: 64
+lr: 0.001
+rank: 4
+symmetric: false
