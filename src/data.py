@@ -5,10 +5,13 @@ from torchvision.datasets import MNIST
 
 
 class MNISTDataModule(pl.LightningDataModule):
-    def __init__(self, data_dir: str = "./raw", batch_size: int = 1024):
+    def __init__(
+        self, data_dir: str = "./raw", batch_size: int = 1024, num_workers: int = 8
+    ):
         super().__init__()
         self.data_dir = data_dir
         self.batch_size = batch_size
+        self.num_workers = num_workers
         self.transform = transforms.ToTensor()
 
     def setup(self, stage: str):
@@ -29,13 +32,33 @@ class MNISTDataModule(pl.LightningDataModule):
             )
 
     def train_dataloader(self):
-        return DataLoader(self.mnist_train, batch_size=self.batch_size)
+        return DataLoader(
+            self.mnist_train,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            shuffle=True,
+        )
 
     def val_dataloader(self):
-        return DataLoader(self.mnist_val, batch_size=self.batch_size)
+        return DataLoader(
+            self.mnist_val,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            shuffle=False,
+        )
 
     def test_dataloader(self):
-        return DataLoader(self.mnist_test, batch_size=self.batch_size)
+        return DataLoader(
+            self.mnist_test,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            shuffle=False,
+        )
 
     def predict_dataloader(self):
-        return DataLoader(self.mnist_predict, batch_size=self.batch_size)
+        return DataLoader(
+            self.mnist_predict,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            shuffle=False,
+        )

@@ -45,7 +45,9 @@ def rsetattr(obj, attr_string: str, value) -> None:
     setattr(getattr(parent_obj, attr_name)[indices[-1]], indices[-1], value)
 
 
-def validate_linear_input(in_features, out_features, rank, symmetric):
+def validate_linear_input(
+    in_features: int, out_features: int, rank: int, symmetric: True
+):
     if rank >= min(in_features, out_features):
         raise ValueError(
             "`rank` is greater or equal to both `in_features` and `out_features`"
@@ -60,14 +62,14 @@ def validate_linear_input(in_features, out_features, rank, symmetric):
         raise ValueError("Low-rank setup has more parameters than full-rank setup.")
 
 
-def singular_values(matrix):
+def singular_values(matrix) -> torch.Tensor:
     dask_array = torch2dask(matrix)
     _, sigma, _ = da.linalg.svd(dask_array)
     return torch.from_numpy(da.compute(sigma))
 
 
 def factorize(
-    matrix,
+    matrix: torch.Tensor,
     rank: int,
     device: torch.device,
 ):
@@ -80,7 +82,7 @@ def factorize(
     return torch.from_numpy(u).to(device), torch.from_numpy(v_t).to(device)
 
 
-def apply_low_rank(model, path, rank: int, cls):
+def apply_low_rank(model, path: str, rank: int, cls) -> None:
     module = rgetattr(model, path)
     weight = module.weight
     if isinstance(module, nn.Linear):

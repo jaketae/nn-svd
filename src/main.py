@@ -13,17 +13,21 @@ from .model import MNISTLowRankModel, MNISTModel
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--max_epochs", type=int, default=5)
-    parser.add_argument("--batch_size", type=int, default=1024)
+    parser.add_argument("--max_epochs", type=int, default=10)
+    parser.add_argument("--batch_size", type=int, default=16)
+    parser.add_argument("--num_workers", type=int, default=32)
     parser.add_argument("--hidden_size", type=int, default=64)
     parser.add_argument("--lr", type=float, default=2e-4)
     parser.add_argument("--rank", type=int, default=-1)
+    parser.add_argument("--symmetric", action="store_true")
+    parser.add_argument("--no-symmetric", dest="symmetric", action="store_false")
+    parser.set_defaults(symmetric=False)
     parser.add_argument("--checkpoint_path", type=str, required=False)
     args = parser.parse_args()
     return args
 
 
-def read_metrics(logger):
+def read_metrics(logger) -> None:
     logger_path = logger.log_dir
     metrics_path = os.path.join(logger_path, "metrics.csv")
     metrics = pd.read_csv(metrics_path)
@@ -33,7 +37,7 @@ def read_metrics(logger):
     plt.savefig(os.path.join(logger_path, "plot.png"))
 
 
-def main(args):
+def main(args) -> None:
     pl.seed_everything(args.seed)
     logger_path = "./src/logs"
     if args.rank == -1:
@@ -46,8 +50,11 @@ def main(args):
             hidden_size=args.hidden_size,
             lr=args.lr,
             rank=args.rank,
+            symmetric=args.symmetric,
         )
         logger_path = os.path.join(logger_path, f"{args.rank}")
+        if args.symmetric:
+            logger_path = os.path.join(logger_path, "_symmetric")
     else:
         # svd full rank to low rank
         model = MNISTModel.from_pretrained(
@@ -55,7 +62,9 @@ def main(args):
         )
         logger_path = os.path.join(logger_path, f"{args.rank}_svd")
 
-    datamodule = MNISTDataModule(batch_size=args.batch_size)
+    datamodule = MNISTDataModule(
+        batch_size=args.batch_size, num_workers=args.num_workers
+    )
     trainer = pl.Trainer(
         accelerator="auto",
         devices=1,
