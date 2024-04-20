@@ -1,6 +1,6 @@
-## NN SVD
+## NN-SVD
 
-This repository contains code for NN SVD. This work was completed as part of MATH 232: Advanced Linear Algebra.
+This repository contains code for NN-SVD. This work was completed as part of MATH 232: Advanced Linear Algebra.
 
 ## Abstract
 
