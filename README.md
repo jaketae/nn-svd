@@ -1,11 +1,10 @@
 ## NN-SVD
 
-This repository contains code for NN-SVD. This work was completed as part of MATH 232: Advanced Linear Algebra.
+This repository contains code for [NN-SVD](https://drive.google.com/file/d/1eEMpPgskY99Imvdi9LH7lt10nr38iBdV/view?usp=share_link). This work was completed as part of MATH 232: Advanced Linear Algebra.
 
 ## Abstract
 
-> Neural networks have become the standard architecture in machine learning. A typical deep learning solution involves an over-parameterized neural network, which is trained on large amounts of data. However, the recent exponential growth trend in model size highlights the need for effective compression methods that reduce the model footprint. In this work, we propose NN-SVD, a simple yet effective method that employs singular value decomposition to neural network layer weights to compress the model. We show that \ourmethod is theoretically robust under mild Lipschitz assumptions and demonstrates strong empirical performance on a small fully-connected model trained on the MNIST dataset, as well as on GPT-2, a standard language model based on the transformer architecture.
-
+> Neural networks have become the standard architecture in machine learning. A typical deep learning solution involves an over-parameterized neural network, which is trained on large amounts of data. However, the recent exponential growth trend in model size highlights the need for effective compression methods that reduce the model footprint. In this work, we propose NN-SVD, a simple yet effective method that employs singular value decomposition to neural network layer weights to compress the model. We show that NN-SVD is theoretically robust under mild Lipschitz assumptions and demonstrates strong empirical performance on a small fully-connected model trained on the MNIST dataset.
 
 ## Quickstart
 
